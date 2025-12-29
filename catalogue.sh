@@ -9,9 +9,10 @@ N="\e[0m"
 
 LOGS_FOLDER="/var/log/shell-roboshop"
 SCRIPT_NAME=$( echo $0 | cut -d "." -f1 )
+
 MONGODB_HOST=mongodb.dawgs.online
 LOG_FILE="$LOGS_FOLDER/$SCRIPT_NAME.log" # /var/log/shell-script/16-logs.log
-
+SCRIPT_DIR=$PWD
 mkdir -p $LOGS_FOLDER
 echo "Script started executed at: $(date)" | tee -a $LOG_FILE
 
@@ -50,7 +51,7 @@ VALIDATE $? "Unzip Catalogue"
 
 npm install &>>$LOG_FILE
 VALIDATE $? "Install Dep" 
-cp catalogue.service /etc/systemd/system/catalogue.service
+cp $SCRIPT_DIR/catalogue.service /etc/systemd/system/catalogue.service
 VALIDATE $? "Systemctl Service"
 systemctl daemon-reload
 VALIDATE $? "Daemon Reload"
@@ -58,7 +59,7 @@ VALIDATE $? "Daemon Reload"
 systemctl enable catalogue
 VALIDATE $? "Enable Catalogue" 
 
-cp mongo.repo /etc/yum.repos.d/mongo.repo
+cp $SCRIPT_DIR/mongo.repo /etc/yum.repos.d/mongo.repo
 VALIDATE $? "Cpoying Mongo Repo"
 
 dnf install mongodb-mongosh -y &>>$LOG_FILE
