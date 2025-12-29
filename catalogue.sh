@@ -47,10 +47,16 @@ else
 fi    
 mkdir -p /app 
 VALIDATE $? "Creating App Dir"
+
 curl -o /tmp/catalogue.zip https://roboshop-artifacts.s3.amazonaws.com/catalogue-v3.zip &>>$LOG_FILE
 VALIDATE $? "Downloading Catalogue Application"
+
 cd /app 
 VALIDATE $? "Changing to App Dir"
+
+rm -rf /app/*
+VALIDATE $? "Removing Existing Code"
+
 unzip /tmp/catalogue.zip &>>$LOG_FILE
 VALIDATE $? "Unzip Catalogue"
 
