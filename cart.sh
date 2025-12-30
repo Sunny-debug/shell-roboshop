@@ -1,9 +1,5 @@
 #!/bin/bash
 
-set -euo pipefail
-
-trap 'echo "There is an error in $LINENO, Cmd is :: $BASH_COMMAND"' ERR
-
 USERID=$(id -u)
 R="\e[31m"
 G="\e[32m"
@@ -12,9 +8,10 @@ N="\e[0m"
 
 LOGS_FOLDER="/var/log/shell-roboshop"
 SCRIPT_NAME=$( echo $0 | cut -d "." -f1 )
-LOG_FILE="$LOGS_FOLDER/$SCRIPT_NAME.log" # /var/log/shell-script/16-logs.log
-START_TIME=$(date +%s)
 SCRIPT_DIR=$PWD
+MONGODB_HOST=mongodb.daws86s.fun
+LOG_FILE="$LOGS_FOLDER/$SCRIPT_NAME.log" # /var/log/shell-script/16-logs.log
+
 mkdir -p $LOGS_FOLDER
 echo "Script started executed at: $(date)" | tee -a $LOG_FILE
 
@@ -32,28 +29,46 @@ VALIDATE(){ # functions receive inputs through args just like shell script args
     fi
 }
 
-dnf module disable nodejs -y
+##### NodeJS ####
+dnf module disable nodejs -y &>>$LOG_FILE
+VALIDATE $? "Disabling NodeJS"
+dnf module enable nodejs:20 -y  &>>$LOG_FILE
+VALIDATE $? "Enabling NodeJS 20"
+dnf install nodejs -y &>>$LOG_FILE
+VALIDATE $? "Installing NodeJS"
 
-dnf module enable nodejs:20 -y
+id roboshop &>>$LOG_FILE
+if [ $? -ne 0 ]; then
+    useradd --system --home /app --shell /sbin/nologin --comment "roboshop system user" roboshop &>>$LOG_FILE
+    VALIDATE $? "Creating system user"
+else
+    echo -e "User already exist ... $Y SKIPPING $N"
+fi
 
-dnf install nodejs -y
+mkdir -p /app
+VALIDATE $? "Creating app directory"
 
-useradd --system --home /app --shell /sbin/nologin --comment "roboshop system user" roboshop
+curl -o /tmp/cart.zip https://roboshop-artifacts.s3.amazonaws.com/cart-v3.zip &>>$LOG_FILE
+VALIDATE $? "Downloading cart application"
 
-mkdir /app 
-
-curl -L -o /tmp/cart.zip https://roboshop-artifacts.s3.amazonaws.com/cart-v3.zip
 cd /app 
-unzip /tmp/cart.zip
+VALIDATE $? "Changing to app directory"
 
+rm -rf /app/*
+VALIDATE $? "Removing existing code"
 
-cd /app 
-npm install 
+unzip /tmp/cart.zip &>>$LOG_FILE
+VALIDATE $? "unzip cart"
 
-cp $SCRIPT_DIR/
+npm install &>>$LOG_FILE
+VALIDATE $? "Install dependencies"
 
+cp $SCRIPT_DIR/cart.service /etc/systemd/system/cart.service
+VALIDATE $? "Copy systemctl service"
 
 systemctl daemon-reload
+systemctl enable cart &>>$LOG_FILE
+VALIDATE $? "Enable cart"
 
-systemctl enable cart 
-systemctl start cart
+systemctl restart cart
+VALIDATE $? "Restarted cart"
