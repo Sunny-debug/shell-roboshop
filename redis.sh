@@ -33,12 +33,12 @@ VALIDATE(){ # functions receive inputs through args just like shell script args
 
 dnf module disable redis -y &>>$LOG_FILE
 
-dnf module enable redis:7 -y
+dnf module enable redis:7 -y &>>$LOG_FILE
 
 dnf install redis -y &>>$LOG_FILE
 VALIDATE $? 'Redis Installed'
 
-sed -i '127.0.0.1/0.0.0.0/g' /etc/redis/redis.conf
+sed -i 's/127.0.0.1/0.0.0.0/g' /etc/redis/redis.conf
 sed -i 's/^protected-mode[[:space:]]\+yes/protected-mode no/' /etc/redis/redis.conf
 
 systemctl enable redis
