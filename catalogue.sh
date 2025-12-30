@@ -44,7 +44,7 @@ if [ $? -ne 0 ]; then
     VALIDATE $? "Creating USER"
 else   
     echo -e "USER already exists $Y ... SKIPPING ... $N"
-fi    
+fi
 mkdir -p /app 
 VALIDATE $? "Creating App Dir"
 
@@ -76,7 +76,7 @@ VALIDATE $? "Cpoying Mongo Repo"
 dnf install mongodb-mongosh -y &>>$LOG_FILE
 VALIDATE $? "Installing Mongo Client"
 mongosh --host $MONGODB_HOST </app/db/master-data.js
-VALIDATE $? "Load catalogue Products"
+VALIDATE $? "Loading catalogue Products"
 
 systemctl restart catalogue
 VALIDATE $? "Restarted Catalogue"
